@@ -14,4 +14,16 @@ public class Converters {
         .rocketName(spacexRocketResponse.getRocketName())
         .build();
   }
+
+  static RocketResponse toRocketResponse(final SpacexRocketResponse spacexRocketResponse) {
+    return RocketResponse.builder()
+        .id(spacexRocketResponse.getRocketId())
+        .rocketName(spacexRocketResponse.getRocketName())
+        .description(spacexRocketResponse.getDescription())
+        .active(spacexRocketResponse.getActive())
+        .boosters(spacexRocketResponse.getBoosters())
+        .stages(spacexRocketResponse.getStages())
+        .successRatePct(spacexRocketResponse.getSuccessRatePct())
+        .build();
+  }
 }
