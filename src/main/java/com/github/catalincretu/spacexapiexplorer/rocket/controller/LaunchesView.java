@@ -7,4 +7,5 @@ import java.util.List;
 @Value
 public class LaunchesView {
   List<LaunchView> next;
+  List<LaunchView> past;
 }

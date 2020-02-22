@@ -29,9 +29,16 @@ public class SpacexClient {
         .bodyToMono(SpacexRocketResponse.class);
   }
 
-  public Flux<SpacexRocketLaunchResponse> findRocketLaunches(final String rocketId) {
+  public Flux<SpacexRocketLaunchResponse> findNextRocketLaunches(final String rocketId) {
     return webClient.get()
         .uri("/v3/launches/upcoming?rocket_id=" + rocketId)
+        .retrieve()
+        .bodyToFlux(SpacexRocketLaunchResponse.class);
+  }
+
+  public Flux<SpacexRocketLaunchResponse> findPastRocketLaunches(final String rocketId) {
+    return webClient.get()
+        .uri("/v3/launches/past?rocket_id=" + rocketId)
         .retrieve()
         .bodyToFlux(SpacexRocketLaunchResponse.class);
   }

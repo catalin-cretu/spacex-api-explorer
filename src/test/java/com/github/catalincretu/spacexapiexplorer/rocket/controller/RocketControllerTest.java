@@ -53,10 +53,7 @@ class RocketControllerTest {
   @Test
   @DisplayName("GET /api/rockets - returns rockets summary response")
   void getAllRockets() {
-    stubFor(get("/v3/rockets")
-        .willReturn(aResponse()
-            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .withBodyFile("rockets.json")));
+    setupGetRequestStub("/v3/rockets", "rockets.json");
 
     webTestClient.get()
         .uri("/api/rockets")
@@ -73,10 +70,7 @@ class RocketControllerTest {
   @Test
   @DisplayName("GET /api/rockets/{rocketId} - by ID - returns single rocket response")
   void getRocketById() {
-    stubFor(get("/v3/rockets/falcon9")
-        .willReturn(aResponse()
-            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .withBodyFile("rocket_falcon9.json")));
+    setupGetRequestStub("/v3/rockets/falcon9", "rocket_falcon9.json");
 
     webTestClient.get()
         .uri("/api/rockets/falcon9")
@@ -100,14 +94,9 @@ class RocketControllerTest {
   @Test
   @DisplayName("GET /api/rockets/{rocketId} - by ID - returns single rocket and launches response")
   void getRocketByIdWithLaunches() {
-    stubFor(get("/v3/rockets/falcon9")
-        .willReturn(aResponse()
-            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .withBodyFile("rocket_falcon9.json")));
-    stubFor(get("/v3/launches/upcoming?rocket_id=falcon9")
-        .willReturn(aResponse()
-            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-            .withBodyFile("launches_upcoming_falcon9.json")));
+    setupGetRequestStub("/v3/rockets/falcon9", "rocket_falcon9.json");
+    setupGetRequestStub("/v3/launches/upcoming?rocket_id=falcon9", "launches_upcoming_falcon9.json");
+    setupGetRequestStub("/v3/launches/past?rocket_id=falcon9", "launches_past_falcon9.json");
 
     webTestClient.get()
         .uri("/api/rockets/falcon9")
@@ -117,18 +106,33 @@ class RocketControllerTest {
         .expectBody()
 
         .jsonPath("id").isEqualTo("falcon9")
+
         .jsonPath("launches.next.size()").isEqualTo(3)
         .jsonPath("launches.next[*].flightNumber").value(hasItems(91, 92, 93))
+        .jsonPath("launches.next[*].missionName")
+        .value(hasItems("CRS-20", "Starlink 5", "SAOCOM 1B & Smallsat SSO Rideshare 1"))
+        .jsonPath("launches.next[*].launchDate")
+        .value(hasItems("2020-03-02T06:45:00Z", "2020-03-03T00:00:00Z", "2020-03-04T00:00:00Z"))
 
-        .jsonPath("launches.next[*].missionName").value(
-        hasItems("CRS-20", "Starlink 5", "SAOCOM 1B & Smallsat SSO Rideshare 1"))
-
-        .jsonPath("launches.next[*].launchDate").value(
-        hasItems("2020-03-02T06:45:00Z", "2020-03-03T00:00:00Z", "2020-03-04T00:00:00Z"));
+        .jsonPath("launches.past.size()").isEqualTo(3)
+        .jsonPath("launches.past[*].flightNumber").value(hasItems(90, 89, 88))
+        .jsonPath("launches.past[*].missionName")
+        .value(hasItems("Starlink 4", "Starlink 3", "Crew Dragon In Flight Abort Test"))
+        .jsonPath("launches.past[*].launchDate")
+        .value(hasItems("2020-02-17T15:05:55Z", "2020-01-29T14:06:00Z", "2020-01-19T14:00:00Z"));
 
     verify(
         getRequestedFor(urlEqualTo("/v3/rockets/falcon9")));
     verify(
         getRequestedFor(urlEqualTo("/v3/launches/upcoming?rocket_id=falcon9")));
+    verify(
+        getRequestedFor(urlEqualTo("/v3/launches/past?rocket_id=falcon9")));
+  }
+
+  private static void setupGetRequestStub(final String url, final String fileName) {
+    stubFor(get(url)
+        .willReturn(aResponse()
+            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .withBodyFile(fileName)));
   }
 }

@@ -33,12 +33,15 @@ public class RocketController {
   @GetMapping("/{rocketId}")
   public Mono<RocketResponse> getOne(@PathVariable String rocketId) {
     log.info("Find rocket with id [{}]", rocketId);
+
     Mono<SpacexRocketResponse> rocketResponse = spacexClient.findRocket(rocketId);
-    Flux<SpacexRocketLaunchResponse> rocketLaunchesResponse = spacexClient.findRocketLaunches(rocketId);
+    Flux<SpacexRocketLaunchResponse> nextRocketLaunchesResponse = spacexClient.findNextRocketLaunches(rocketId);
+    Flux<SpacexRocketLaunchResponse> pastRocketLaunchesResponse = spacexClient.findPastRocketLaunches(rocketId);
 
     return Mono.zip(
+        Converters::toRocketResponse,
         rocketResponse,
-        rocketLaunchesResponse.collect(toList()),
-        Converters::toRocketResponse);
+        nextRocketLaunchesResponse.collect(toList()),
+        pastRocketLaunchesResponse.collect(toList()));
   }
 }
