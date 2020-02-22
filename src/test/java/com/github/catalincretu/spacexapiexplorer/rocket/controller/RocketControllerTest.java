@@ -25,7 +25,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
-@SuppressWarnings("squid:S2696")
+@SuppressWarnings({"squid:S2696", "squid:S1192"})
 class RocketControllerTest {
 
   private static WireMockServer wireMockServer;
@@ -95,5 +95,40 @@ class RocketControllerTest {
 
     verify(
         getRequestedFor(urlEqualTo("/v3/rockets/falcon9")));
+  }
+
+  @Test
+  @DisplayName("GET /api/rockets/{rocketId} - by ID - returns single rocket and launches response")
+  void getRocketByIdWithLaunches() {
+    stubFor(get("/v3/rockets/falcon9")
+        .willReturn(aResponse()
+            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .withBodyFile("rocket_falcon9.json")));
+    stubFor(get("/v3/launches/upcoming?rocket_id=falcon9")
+        .willReturn(aResponse()
+            .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
+            .withBodyFile("launches_upcoming_falcon9.json")));
+
+    webTestClient.get()
+        .uri("/api/rockets/falcon9")
+        .exchange()
+
+        .expectStatus().isOk()
+        .expectBody()
+
+        .jsonPath("id").isEqualTo("falcon9")
+        .jsonPath("launches.next.size()").isEqualTo(3)
+        .jsonPath("launches.next[*].flightNumber").value(hasItems(91, 92, 93))
+
+        .jsonPath("launches.next[*].missionName").value(
+        hasItems("CRS-20", "Starlink 5", "SAOCOM 1B & Smallsat SSO Rideshare 1"))
+
+        .jsonPath("launches.next[*].launchDate").value(
+        hasItems("2020-03-02T06:45:00Z", "2020-03-03T00:00:00Z", "2020-03-04T00:00:00Z"));
+
+    verify(
+        getRequestedFor(urlEqualTo("/v3/rockets/falcon9")));
+    verify(
+        getRequestedFor(urlEqualTo("/v3/launches/upcoming?rocket_id=falcon9")));
   }
 }

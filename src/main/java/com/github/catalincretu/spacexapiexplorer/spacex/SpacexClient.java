@@ -28,4 +28,11 @@ public class SpacexClient {
         .retrieve()
         .bodyToMono(SpacexRocketResponse.class);
   }
+
+  public Flux<SpacexRocketLaunchResponse> findRocketLaunches(final String rocketId) {
+    return webClient.get()
+        .uri("/v3/launches/upcoming?rocket_id=" + rocketId)
+        .retrieve()
+        .bodyToFlux(SpacexRocketLaunchResponse.class);
+  }
 }

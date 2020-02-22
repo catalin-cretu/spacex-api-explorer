@@ -15,4 +15,6 @@ public class RocketResponse {
   Integer stages;
   Integer boosters;
   Integer successRatePct;
+
+  LaunchesView launches;
 }

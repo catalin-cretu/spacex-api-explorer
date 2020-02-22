@@ -1,6 +1,8 @@
 package com.github.catalincretu.spacexapiexplorer.rocket.controller;
 
 import com.github.catalincretu.spacexapiexplorer.spacex.SpacexClient;
+import com.github.catalincretu.spacexapiexplorer.spacex.SpacexRocketLaunchResponse;
+import com.github.catalincretu.spacexapiexplorer.spacex.SpacexRocketResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @AllArgsConstructor
@@ -29,8 +33,12 @@ public class RocketController {
   @GetMapping("/{rocketId}")
   public Mono<RocketResponse> getOne(@PathVariable String rocketId) {
     log.info("Find rocket with id [{}]", rocketId);
+    Mono<SpacexRocketResponse> rocketResponse = spacexClient.findRocket(rocketId);
+    Flux<SpacexRocketLaunchResponse> rocketLaunchesResponse = spacexClient.findRocketLaunches(rocketId);
 
-    return spacexClient.findRocket(rocketId)
-        .map(Converters::toRocketResponse);
+    return Mono.zip(
+        rocketResponse,
+        rocketLaunchesResponse.collect(toList()),
+        Converters::toRocketResponse);
   }
 }
