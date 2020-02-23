@@ -129,9 +129,31 @@ class RocketControllerTest {
         getRequestedFor(urlEqualTo("/v3/launches/past?rocket_id=falcon9")));
   }
 
+  @Test
+  @DisplayName("GET /api/rockets/{rocketId} - error response - returns error response")
+  void getRocketByIdError() {
+    setupGetRequestStub("/v3/rockets/falcon9", "rocket_falcon9.json");
+    stubFor(get("/v3/launches/upcoming?rocket_id=falcon9")
+        .willReturn(aResponse().withStatus(404)));
+    setupGetRequestStub("/v3/launches/past?rocket_id=falcon9", "launches_past_falcon9.json");
+
+    webTestClient.get()
+        .uri("/api/rockets/falcon9")
+        .exchange()
+
+        .expectStatus().is5xxServerError();
+
+    verify(
+        getRequestedFor(urlEqualTo("/v3/rockets/falcon9")));
+    verify(
+        getRequestedFor(urlEqualTo("/v3/launches/upcoming?rocket_id=falcon9")));
+    verify(
+        getRequestedFor(urlEqualTo("/v3/launches/past?rocket_id=falcon9")));
+  }
+
   private static void setupGetRequestStub(final String url, final String fileName) {
     stubFor(get(url)
-        .willReturn(aResponse()
+        .willReturn(aResponse().withFixedDelay(1000)
             .withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
             .withBodyFile(fileName)));
   }

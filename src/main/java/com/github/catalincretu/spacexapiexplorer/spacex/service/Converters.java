@@ -1,19 +1,24 @@
-package com.github.catalincretu.spacexapiexplorer.rocket.controller;
+package com.github.catalincretu.spacexapiexplorer.spacex.service;
 
-import com.github.catalincretu.spacexapiexplorer.spacex.SpacexRocketLaunchResponse;
-import com.github.catalincretu.spacexapiexplorer.spacex.SpacexRocketResponse;
+import com.github.catalincretu.spacexapiexplorer.rocket.controller.LaunchView;
+import com.github.catalincretu.spacexapiexplorer.rocket.controller.LaunchesView;
+import com.github.catalincretu.spacexapiexplorer.rocket.controller.RocketResponse;
+import com.github.catalincretu.spacexapiexplorer.rocket.controller.RocketSummaryResponse;
+import com.github.catalincretu.spacexapiexplorer.spacex.client.SpacexRocketLaunchResponse;
+import com.github.catalincretu.spacexapiexplorer.spacex.client.SpacexRocketResponse;
 import lombok.experimental.UtilityClass;
 
 import java.util.Comparator;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
 @UtilityClass
 public class Converters {
 
-  static RocketSummaryResponse toRocketsResponse(final SpacexRocketResponse spacexRocketResponse) {
+  public static RocketSummaryResponse toRocketsResponse(final SpacexRocketResponse spacexRocketResponse) {
     return RocketSummaryResponse.builder()
         .id(spacexRocketResponse.getRocketId())
         .active(spacexRocketResponse.getActive())
@@ -22,33 +27,36 @@ public class Converters {
         .build();
   }
 
-  static RocketResponse toRocketResponse(final Object[] responses) {
-    SpacexRocketResponse spacexRocketResponse = (SpacexRocketResponse) responses[0];
-    @SuppressWarnings("unchecked")
-    List<SpacexRocketLaunchResponse> nextRocketLaunchResponses = (List<SpacexRocketLaunchResponse>) responses[1];
-    @SuppressWarnings("unchecked")
-    List<SpacexRocketLaunchResponse> pastRocketLaunchResponses = (List<SpacexRocketLaunchResponse>) responses[2];
-
+  static RocketResponse toRocketResponseWithNextLaunches(
+      final SpacexRocketResponse spacexRocketResponse,
+      final List<SpacexRocketLaunchResponse> nextLaunches
+  ) {
     return RocketResponse.builder()
         .id(spacexRocketResponse.getRocketId())
         .rocketName(spacexRocketResponse.getRocketName())
-        .description(spacexRocketResponse.getDescription())
         .active(spacexRocketResponse.getActive())
-        .boosters(spacexRocketResponse.getBoosters())
         .stages(spacexRocketResponse.getStages())
+        .boosters(spacexRocketResponse.getBoosters())
+        .description(spacexRocketResponse.getDescription())
         .successRatePct(spacexRocketResponse.getSuccessRatePct())
-        .launches(toFirstLaunches(nextRocketLaunchResponses, pastRocketLaunchResponses))
+        .launches(new LaunchesView(toNextLaunches(nextLaunches), emptyList()))
         .build();
   }
 
-  private static LaunchesView toFirstLaunches(
-      final List<SpacexRocketLaunchResponse> nextSpacexLaunchResponses,
-      final List<SpacexRocketLaunchResponse> pastSpacexLaunchResponses
+  static RocketResponse toRocketResponseWithPastLaunches(
+      final RocketResponse rocketResponse,
+      final List<SpacexRocketLaunchResponse> pastLaunches
   ) {
-    List<LaunchView> nextLaunches = toNextLaunches(nextSpacexLaunchResponses);
-    List<LaunchView> pastLaunches = toPastLaunches(pastSpacexLaunchResponses);
-
-    return new LaunchesView(nextLaunches, pastLaunches);
+    return RocketResponse.builder()
+        .id(rocketResponse.getId())
+        .rocketName(rocketResponse.getRocketName())
+        .description(rocketResponse.getDescription())
+        .active(rocketResponse.getActive())
+        .stages(rocketResponse.getStages())
+        .boosters(rocketResponse.getBoosters())
+        .successRatePct(rocketResponse.getSuccessRatePct())
+        .launches(new LaunchesView(rocketResponse.getLaunches().getNext(), toPastLaunches(pastLaunches)))
+        .build();
   }
 
   private static List<LaunchView> toNextLaunches(final List<SpacexRocketLaunchResponse> spacexLaunchResponses) {

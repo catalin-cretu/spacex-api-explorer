@@ -1,4 +1,4 @@
-package com.github.catalincretu.spacexapiexplorer.spacex;
+package com.github.catalincretu.spacexapiexplorer.spacex.client;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

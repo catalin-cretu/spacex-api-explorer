@@ -15,3 +15,4 @@ Very simple RESTful API that returns aggregated responses of the SpaceX RESTful 
     
 - `GET` http://localhost:8080/api/rockets/{rocketId}
     - returns details about a single rocket, past and upcoming launches
+    - `rocketId`s: `falcon1`, `falcon9`, `falconheavy`, `starship`
